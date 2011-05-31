@@ -7,12 +7,12 @@ class Version < ActiveRecord::Base
   } }
 
   named_scope :subsequent, lambda { |version| {
-    :conditions => ["id > ?", version.is_a?(ActiveRecord::Base) ? version.id : version],
+    :conditions => ["id > ?", version.is_a?(self) ? version.id : version],
     :order      => "id ASC",
   } }
 
   named_scope :preceding, lambda { |version| {
-    :conditions => ["id < ?", version.is_a?(ActiveRecord::Base) ? version.id : version],
+    :conditions => ["id < ?", version.is_a?(self) ? version.id : version],
     :order      => "id DESC",
   } }
 
@@ -90,7 +90,7 @@ class Version < ActiveRecord::Base
   end
 
   def sibling_versions
-    Version.with_item_keys(item_type, item_id)
+    self.class.with_item_keys(item_type, item_id)
   end
 
   def next

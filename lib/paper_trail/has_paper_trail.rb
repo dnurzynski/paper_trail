@@ -16,6 +16,13 @@ module PaperTrail
       #            Values are objects or procs (which are called with `self`, i.e. the model with the paper
       #            trail).  See `PaperTrail::Controller.info_for_paper_trail` for how to store data from
       #            the controller.
+      # :class_name   the name of a custom Version class.  This class should inherit from Version.
+      # :ignore       an array of attributes for which a new `Version` will not be created if only they change.
+      # :only         inverse of `ignore` - a new `Version` will be created only for these attributes if supplied
+      # :meta         a hash of extra data to store.  You must add a column to the `versions` table for each key.
+      #               Values are objects or procs (which are called with `self`, i.e. the model with the paper
+      #               trail).  See `PaperTrail::Controller.info_for_paper_trail` for how to store data from
+      #               the controller.
       def has_paper_trail(options = {})
         # Lazily include the instance methods so we don't clutter up
         # any more ActiveRecord models than we have to.
@@ -23,6 +30,9 @@ module PaperTrail
 
         # The version this instance was reified from.
         attr_accessor :version
+        
+        cattr_accessor :version_class_name
+        self.version_class_name = options[:class_name] || "Version"
 
         cattr_accessor :ignore
         self.ignore = (options[:ignore] || []).map &:to_s
@@ -35,7 +45,7 @@ module PaperTrail
         cattr_accessor :paper_trail_active
         self.paper_trail_active = true
 
-        has_many :versions, :as => :item, :order => 'created_at ASC, id ASC'
+        has_many :versions, :class_name => version_class_name, :as => :item, :order => 'created_at ASC, id ASC'
 
         after_create  :record_create
         before_update :record_update
@@ -64,7 +74,7 @@ module PaperTrail
 
       # Returns who put the object into its current state.
       def originator
-        versions.last.try :whodunnit
+        version_class_name.constantize.with_item_keys(self.class.name, id).last.try :whodunnit
       end
 
       # Returns the object (not a Version) as it was at the given timestamp.
@@ -107,7 +117,8 @@ module PaperTrail
 
       def record_destroy
         if switched_on? and not new_record?
-          Version.create merge_metadata(:item      => self,
+          version_class_name.constantize.create merge_metadata(:item_id   => self.id,
+                                        :item_type => self.class.name,
                                         :event     => 'destroy',
                                         :object    => object_to_string(item_before_change),
                                         :whodunnit => PaperTrail.whodunnit)
