@@ -19,7 +19,8 @@ PaperTrail lets you track changes to your models' data.  It's good for auditing 
 * Can be turned off/on per class (useful for migrations).
 * Can be turned off/on globally (useful for testing).
 * No configuration necessary.
-* Stores everything in a single database table (generates migration for you).
+* Stores everything in a single database table by default (generates migration for you), or can use separate tables for separate models.
+* Supports custom version classes so different models' versions can have different behaviour.
 * Thoroughly tested.
 * Threadsafe.
 
@@ -290,6 +291,32 @@ To find out who made a `version`'s object look that way, use `version.originator
     >> last_version.terminator                     # 'Bob'
 
 
+## Custom Version Classes
+
+You can specify custom version subclasses with the `:class_name` option:
+
+    class Post < ActiveRecord::Base
+      has_paper_trail :class_name => 'PostVersion'
+    end
+
+    class PostVersion < Version
+      # custom behaviour, e.g:
+      set_table_name :post_versions
+    end
+
+This allows you to store each model's versions in a separate table, which is useful if you have a lot of versions being created.
+
+Alternatively you could store certain metadata for one type of version, and other metadata for other versions.
+
+
+## Associations
+
+I haven't yet found a good way to get PaperTrail to automatically restore associations when you reify a model.  See [here for a little more info](http://airbladesoftware.com/notes/undo-and-redo-with-papertrail).
+
+If you can think of a good way to achieve this, please let me know.
+
+
+>>>>>>> 1c43e85... Add note about custom version subclasses.
 ## Has-One Associations
 
 PaperTrail automatically restores `:has_one` associations as they were at (actually, 3 seconds before) the time.
