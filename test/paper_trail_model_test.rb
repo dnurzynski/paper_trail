@@ -6,6 +6,15 @@ class Widget < ActiveRecord::Base
   has_many :fluxors, :order => :name
 end
 
+class Post < ActiveRecord::Base
+  has_paper_trail :class_name => "PostVersion"
+
+end
+
+class PostVersion < Version
+  set_table_name :post_versions
+end
+
 class FooWidget < Widget
 end
 
