@@ -2,7 +2,7 @@ module PaperTrail
   module Controller
 
     def self.included(base)
-      base.before_filter :set_paper_trail_whodunnit
+      #base.before_filter :set_paper_trail_whodunnit
       base.before_filter :set_paper_trail_controller_info
     end
 
